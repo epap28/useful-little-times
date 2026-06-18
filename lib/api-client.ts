@@ -3,7 +3,7 @@ import type { AuthResponse, Feedback, HistoryResponse, Interaction, Recap, User 
 const TOKEN_KEY = "ult_token";
 
 export function getApiBaseUrl() {
-  return process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8787";
+  return process.env.NEXT_PUBLIC_API_BASE_URL;
 }
 
 export function getToken() {

@@ -60,7 +60,7 @@ Then open `http://localhost:3000`.
 Frontend:
 
 ```env
-NEXT_PUBLIC_API_BASE_URL="http://127.0.0.1:8787"
+NEXT_PUBLIC_API_BASE_URL="https://useful-little-times-api.jeanhamel2832.workers.dev"
 ```
 
 For GitHub Pages, set a repository variable named `NEXT_PUBLIC_API_BASE_URL` to your deployed Worker URL.
