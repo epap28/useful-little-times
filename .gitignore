@@ -1,0 +1,13 @@
+.next
+node_modules
+.npm-cache
+.playwright-browsers
+coverage
+playwright-report
+test-results
+.env
+.env*.local
+*.log
+*.tsbuildinfo
+dist
+tmp

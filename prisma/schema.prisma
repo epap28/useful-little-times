@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PreferenceStatus {
+  PREFERRED
+  AVOIDED
+}
+
+enum CardType {
+  QUICK_FACT
+  MINI_EXPLANATION
+  ANALOGY
+  ACTIVE_RECALL
+  MINI_QUIZ
+  MNEMONIC
+  DID_YOU_KNOW
+  EXPLAIN_BACK
+  MISCONCEPTION
+  ONE_EXAMPLE
+}
+
+enum InteractionKind {
+  LEARNING
+  ACTIVITY
+}
+
+enum Feedback {
+  KNEW_THIS
+  NOT_RELEVANT
+  INTERESTING
+  SHOW_ANOTHER
+  TOO_EASY
+  TOO_HARD
+}
+
+model User {
+  id           String                @id @default(cuid())
+  email        String                @unique
+  name         String?
+  passwordHash String
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  preferences  UserPreference[]
+  interactions UserItemInteraction[]
+  recaps       Recap[]
+}
+
+model Category {
+  id            String           @id @default(cuid())
+  slug          String           @unique
+  name          String
+  description   String?
+  createdAt     DateTime         @default(now())
+  learningItems LearningItem[]
+  preferences   UserPreference[]
+}
+
+model UserPreference {
+  id         String           @id @default(cuid())
+  userId     String
+  categoryId String
+  status     PreferenceStatus
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   Category         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, categoryId])
+}
+
+model Source {
+  id            String               @id @default(cuid())
+  title         String
+  url           String               @unique
+  publisher     String?
+  addedAt       DateTime             @default(now())
+  learningItems LearningItemSource[]
+}
+
+model LearningItem {
+  id            String                @id @default(cuid())
+  slug          String                @unique
+  title         String
+  categoryId    String
+  category      Category              @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  cardType      CardType
+  content       String
+  explanation   String
+  prompt        String?
+  answer        String?
+  answerOptions Json?
+  mnemonic      String?
+  analogy       String?
+  approved      Boolean               @default(true)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  sources       LearningItemSource[]
+  interactions  UserItemInteraction[]
+}
+
+model LearningItemSource {
+  learningItemId String
+  sourceId       String
+  learningItem   LearningItem @relation(fields: [learningItemId], references: [id], onDelete: Cascade)
+  source         Source       @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@id([learningItemId, sourceId])
+}
+
+model ActivityItem {
+  id             String                @id @default(cuid())
+  slug           String                @unique
+  title          String
+  homeVersion    String
+  officeVersion  String
+  remoteVersion  String?
+  why            String
+  safetyNote     String
+  tags           Json?
+  createdAt      DateTime              @default(now())
+  interactions   UserItemInteraction[]
+}
+
+model UserItemInteraction {
+  id             String          @id @default(cuid())
+  userId         String
+  kind           InteractionKind
+  learningItemId String?
+  activityItemId String?
+  shownAt        DateTime        @default(now())
+  feedback       Feedback?
+  quizAnswer     String?
+  quizCorrect    Boolean?
+  batchNumber    Int
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  learningItem   LearningItem?   @relation(fields: [learningItemId], references: [id], onDelete: SetNull)
+  activityItem   ActivityItem?   @relation(fields: [activityItemId], references: [id], onDelete: SetNull)
+
+  @@index([userId, batchNumber])
+  @@index([learningItemId])
+  @@index([activityItemId])
+}
+
+model Recap {
+  id          String   @id @default(cuid())
+  userId      String
+  batchNumber Int
+  title       String
+  summary     String
+  questions   Json
+  itemIds     Json
+  activityIds Json
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, batchNumber])
+}
