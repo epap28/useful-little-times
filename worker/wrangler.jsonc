@@ -8,13 +8,13 @@
     "head_sampling_rate": 1
   },
   "vars": {
-    "ALLOWED_ORIGIN": "http://localhost:3000"
+    "ALLOWED_ORIGIN": "https://epap28.github.io"
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "useful-little-times",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_id": "49dc62eb-c2d2-42d9-8c39-0de87c1994f1",
       "migrations_dir": "migrations"
     }
   ]
