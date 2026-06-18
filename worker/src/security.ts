@@ -1,4 +1,5 @@
 const encoder = new TextEncoder();
+const PASSWORD_HASH_ITERATIONS = 100_000;
 
 function bytesToBase64Url(bytes: Uint8Array) {
   let binary = "";
@@ -20,14 +21,14 @@ function toArrayBuffer(bytes: Uint8Array) {
   return buffer;
 }
 
-async function derivePasswordHash(password: string, salt: Uint8Array) {
+async function derivePasswordHash(password: string, salt: Uint8Array, iterations: number) {
   const key = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]);
   const bits = await crypto.subtle.deriveBits(
     {
       name: "PBKDF2",
       hash: "SHA-256",
       salt: toArrayBuffer(salt),
-      iterations: 120_000
+      iterations
     },
     key,
     256
@@ -37,19 +38,31 @@ async function derivePasswordHash(password: string, salt: Uint8Array) {
 
 export async function hashPassword(password: string) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
-  const hash = await derivePasswordHash(password, salt);
-  return `pbkdf2:120000:${bytesToBase64Url(salt)}:${bytesToBase64Url(hash)}`;
+  const hash = await derivePasswordHash(password, salt, PASSWORD_HASH_ITERATIONS);
+  return `pbkdf2:${PASSWORD_HASH_ITERATIONS}:${bytesToBase64Url(salt)}:${bytesToBase64Url(hash)}`;
 }
 
 export async function verifyPassword(password: string, storedHash: string) {
-  const [algorithm, iterations, saltValue, hashValue] = storedHash.split(":");
-  if (algorithm !== "pbkdf2" || iterations !== "120000" || !saltValue || !hashValue) {
+  const [algorithm, iterationsValue, saltValue, hashValue] = storedHash.split(":");
+  const iterations = Number.parseInt(iterationsValue ?? "", 10);
+  if (
+    algorithm !== "pbkdf2" ||
+    !/^\d+$/.test(iterationsValue ?? "") ||
+    iterations <= 0 ||
+    iterations > PASSWORD_HASH_ITERATIONS ||
+    !saltValue ||
+    !hashValue
+  ) {
     return false;
   }
-  const salt = base64UrlToBytes(saltValue);
-  const expected = base64UrlToBytes(hashValue);
-  const candidate = await derivePasswordHash(password, salt);
-  return timingSafeEqual(candidate, expected);
+  try {
+    const salt = base64UrlToBytes(saltValue);
+    const expected = base64UrlToBytes(hashValue);
+    const candidate = await derivePasswordHash(password, salt, iterations);
+    return timingSafeEqual(candidate, expected);
+  } catch {
+    return false;
+  }
 }
 
 export function timingSafeEqual(a: Uint8Array, b: Uint8Array) {

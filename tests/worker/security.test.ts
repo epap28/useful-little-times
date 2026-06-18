@@ -4,8 +4,13 @@ import { createOpaqueToken, hashPassword, hashToken, verifyPassword } from "../.
 describe("worker security helpers", () => {
   it("hashes and verifies passwords", async () => {
     const hash = await hashPassword("correct horse battery staple");
+    expect(hash).toMatch(/^pbkdf2:100000:/);
     await expect(verifyPassword("correct horse battery staple", hash)).resolves.toBe(true);
     await expect(verifyPassword("wrong password", hash)).resolves.toBe(false);
+  });
+
+  it("rejects unsupported PBKDF2 iteration counts without throwing", async () => {
+    await expect(verifyPassword("password", "pbkdf2:120000:salt:hash")).resolves.toBe(false);
   });
 
   it("creates opaque tokens and hashes them deterministically", async () => {
