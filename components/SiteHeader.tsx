@@ -1,19 +1,31 @@
+"use client";
+
 import { BookOpen, History, Home, Settings, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { signOutAction } from "@/app/actions";
-import type { getCurrentUser } from "@/lib/auth";
+import { clearToken, isSignedIn } from "@/lib/api-client";
+import { useSyncExternalStore } from "react";
 
-type User = Awaited<ReturnType<typeof getCurrentUser>>;
+function subscribeToAuthChanges(callback: () => void) {
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+}
 
-export function SiteHeader({ user }: { user: User }) {
+export function SiteHeader() {
+  const signedIn = useSyncExternalStore(subscribeToAuthChanges, isSignedIn, () => false);
+
+  function signOut() {
+    clearToken();
+    window.location.href = "/";
+  }
+
   return (
     <header className="topbar shell">
-      <Link className="brand" href={user ? "/dashboard" : "/"}>
+      <Link className="brand" href={signedIn ? "/dashboard" : "/"}>
         <span className="brand-mark">UL</span>
         <span>Useful Little Times</span>
       </Link>
       <nav className="nav" aria-label="Main navigation">
-        {user ? (
+        {signedIn ? (
           <>
             <Link href="/dashboard">
               <Home size={16} aria-hidden />
@@ -27,9 +39,9 @@ export function SiteHeader({ user }: { user: User }) {
               <Settings size={16} aria-hidden />
               Settings
             </Link>
-            <form action={signOutAction}>
-              <button type="submit">Sign out</button>
-            </form>
+            <button type="button" onClick={signOut}>
+              Sign out
+            </button>
           </>
         ) : (
           <>
@@ -37,7 +49,7 @@ export function SiteHeader({ user }: { user: User }) {
               <Sparkles size={16} aria-hidden />
               Start
             </Link>
-            <a href="https://github.com/" rel="noreferrer">
+            <a href="https://github.com/epap28/useful-little-times" rel="noreferrer">
               <BookOpen size={16} aria-hidden />
               Open source
             </a>

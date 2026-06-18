@@ -2,12 +2,14 @@
 
 Useful Little Times is a small open-source web app for micro-learning during idle moments. It is made for the tiny pauses while AI tools, coding agents, builds, exports, or automated work finish.
 
-The app keeps the interaction intentionally light: one button, one sourced learning card or movement card, gentle feedback, and a recap after ten uses.
+The frontend is a static Next.js export for GitHub Pages. The backend is a Cloudflare Worker using D1 for SQL storage.
 
 ## Core Features
 
+- Static frontend deployable to GitHub Pages
+- Cloudflare Worker API with D1 persistence
 - Account-based preferences and history
-- One-click launch: “I have several minutes”
+- One-click launch: "I have several minutes"
 - Sourced learning cards across several categories
 - Varied card types: quick facts, explanations, analogies, active recall, mini quizzes, mnemonics, misconceptions, and examples
 - Recommendation logic that respects preferred and avoided categories
@@ -15,63 +17,91 @@ The app keeps the interaction intentionally light: one button, one sourced learn
 - Random movement cards every 5-10 uses on average
 - Batch recap after 10 uses or when ending a work session
 - Content validation so learning items cannot ship without sources
-- Unit tests, Playwright smoke test, and GitHub Actions CI
 
 ## Tech Stack
 
-- Next.js App Router
+- Next.js static export
 - TypeScript
 - React
-- Prisma
-- PostgreSQL
+- Cloudflare Workers
+- Cloudflare D1
+- Wrangler
 - Zod
 - Vitest
-- Playwright
-- ESLint and Prettier
-
-The app uses a small credentials-based auth flow with signed HTTP-only cookies so local development stays simple and contributor-friendly.
+- Playwright smoke test
 
 ## Quick Start
 
+Install dependencies:
+
 ```bash
 npm install
-cp .env.example .env
-docker compose up -d
-npm run db:migrate
-npm run db:seed
+copy .env.example .env
+```
+
+Run the frontend:
+
+```bash
 npm run dev
+```
+
+Run the Worker API locally:
+
+```bash
+npm run d1:migrate:local
+npm run d1:seed:local
+npm run worker:dev
 ```
 
 Then open `http://localhost:3000`.
 
 ## Environment Variables
 
-```bash
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/useful_little_times?schema=public"
-AUTH_SECRET="replace-with-a-long-random-secret-for-cookie-signing"
+Frontend:
+
+```env
+NEXT_PUBLIC_API_BASE_URL="http://127.0.0.1:8787"
 ```
 
-Use a long random `AUTH_SECRET` outside local development.
+For GitHub Pages, set a repository variable named `NEXT_PUBLIC_API_BASE_URL` to your deployed Worker URL.
 
-## Database
+## Cloudflare Setup
 
-Generate Prisma Client:
-
-```bash
-npm run db:generate
-```
-
-Create a local migration and apply it:
+Create the D1 database:
 
 ```bash
-npm run db:migrate
+npx wrangler d1 create useful-little-times
 ```
 
-Seed categories, learning items, sources, and physical activity cards:
+Copy the returned `database_id` into `worker/wrangler.jsonc`.
+
+Apply migrations and seed remote D1:
 
 ```bash
-npm run db:seed
+npm run d1:migrate:remote
+npm run d1:seed:remote
 ```
+
+Deploy the Worker:
+
+```bash
+npm run worker:deploy
+```
+
+The Worker deployment can also run from `.github/workflows/worker.yml` if you configure these GitHub secrets:
+
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
+
+## GitHub Pages
+
+Build the static site for the repository path `/useful-little-times`:
+
+```bash
+npm run pages:build
+```
+
+The Pages workflow deploys the `out/` directory on pushes to `main`.
 
 ## Tests And Validation
 
@@ -80,7 +110,9 @@ npm run content:validate
 npm run lint
 npm run typecheck
 npm run test
+npm run worker:test
 npm run build
+npm run pages:build
 ```
 
 The Playwright smoke test is available with:
@@ -98,26 +130,11 @@ The recommendation engine is deliberately simple:
 - favor preferred categories
 - avoid recently shown learning items
 - avoid long streaks from the same category
-- deprioritize items marked “I knew this” or “Not relevant”
+- deprioritize items marked "I knew this" or "Not relevant"
 - bring back interesting or missed items after they leave the recent window
 - insert a movement card after 5-10 learning uses with increasing probability
 
 This keeps V1 understandable and testable without pretending to be ML-based.
-
-## Learning Science
-
-The app uses lightweight versions of:
-
-- active recall
-- spaced repetition
-- mini quizzes
-- reformulation
-- analogies
-- testing effect
-- interleaving
-- mnemonics
-
-The product goal is not to cram. It is to make one small useful idea easier to retrieve later.
 
 ## Adding Content
 
@@ -131,26 +148,12 @@ npm run content:validate
 
 See `docs/content.md` for content guidelines.
 
-## Deployment
-
-The project can be deployed anywhere that supports Next.js and PostgreSQL, including Vercel, Render, Railway, Fly.io, or Docker-based hosts.
-
-Minimum deployment steps:
-
-1. Provision PostgreSQL.
-2. Set `DATABASE_URL` and `AUTH_SECRET`.
-3. Run Prisma migrations.
-4. Run the seed script or import curated content.
-5. Build with `npm run build`.
-6. Start with `npm run start`.
-
 ## Roadmap
 
 - Grow the verified learning item set from 20 to 60+
-- Add optional OAuth through Auth.js
 - Add account deletion and export
 - Add richer contributor tooling for content review
-- Add per-user recap scheduling controls
+- Add optional custom-domain cookies for stronger session handling
 - Add screenshots once the first hosted demo is available
 
 ## License

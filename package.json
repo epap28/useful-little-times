@@ -7,26 +7,29 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
+    "pages:build": "tsx scripts/build-pages.ts",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "tsx tests/e2e/smoke.ts",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:seed": "tsx prisma/seed.ts",
+    "worker:dev": "wrangler dev --config worker/wrangler.jsonc",
+    "worker:deploy": "wrangler deploy --config worker/wrangler.jsonc",
+    "worker:test": "vitest run tests/worker",
+    "worker:types": "wrangler types worker/src/worker-configuration.d.ts --config worker/wrangler.jsonc",
+    "d1:migrate:local": "wrangler d1 migrations apply useful-little-times --local --config worker/wrangler.jsonc",
+    "d1:migrate:remote": "wrangler d1 migrations apply useful-little-times --remote --config worker/wrangler.jsonc",
+    "d1:seed:local": "tsx scripts/seed-d1.ts --local",
+    "d1:seed:remote": "tsx scripts/seed-d1.ts --remote",
     "content:validate": "tsx scripts/validate-content.ts"
   },
   "dependencies": {
     "@tailwindcss/postcss": "latest",
-    "@prisma/adapter-pg": "latest",
-    "@prisma/client": "latest",
     "dotenv": "latest",
     "lucide-react": "latest",
     "next": "16.2.9",
-    "pg": "latest",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "zod": "latest"
@@ -35,8 +38,8 @@
     "@eslint/eslintrc": "latest",
     "@testing-library/jest-dom": "latest",
     "@testing-library/react": "latest",
+    "@cloudflare/workers-types": "latest",
     "@types/node": "latest",
-    "@types/pg": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "eslint": "latest",
@@ -44,14 +47,11 @@
     "jsdom": "latest",
     "postcss": "latest",
     "prettier": "latest",
-    "prisma": "latest",
     "playwright": "latest",
     "tailwindcss": "latest",
     "tsx": "latest",
     "typescript": "latest",
-    "vitest": "latest"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "vitest": "latest",
+    "wrangler": "latest"
   }
 }

@@ -1,21 +1,17 @@
-import type { Feedback } from "@prisma/client";
+"use client";
+
 import { Footprints, Repeat2, ShieldCheck } from "lucide-react";
-import { recordFeedbackAction, showAnotherAction } from "@/app/actions";
+import type { ActivityItem, Feedback } from "@/lib/domain";
 
 type ActivityCardProps = {
-  interactionId: string;
-  item: {
-    title: string;
-    homeVersion: string;
-    officeVersion: string;
-    remoteVersion: string | null;
-    why: string;
-    safetyNote: string;
-  };
+  item: ActivityItem;
   feedback: Feedback | null;
+  onFeedback: (feedback: Feedback) => void;
+  onAnother: () => void;
+  busy?: boolean;
 };
 
-export function ActivityCard({ interactionId, item, feedback }: ActivityCardProps) {
+export function ActivityCard({ item, feedback, onFeedback, onAnother, busy = false }: ActivityCardProps) {
   return (
     <article className="card learning-card" aria-label="Physical activity card">
       <div className="card-header">
@@ -44,20 +40,13 @@ export function ActivityCard({ interactionId, item, feedback }: ActivityCardProp
         </div>
         {feedback ? <p className="pill">Saved feedback: {feedback.toLowerCase().replaceAll("_", " ")}</p> : null}
         <div className="row">
-          <form action={recordFeedbackAction}>
-            <input type="hidden" name="interactionId" value={interactionId} />
-            <input type="hidden" name="feedback" value="INTERESTING" />
-            <button className="button-secondary" type="submit">
-              Done
-            </button>
-          </form>
-          <form action={showAnotherAction}>
-            <input type="hidden" name="interactionId" value={interactionId} />
-            <button className="button-quiet" type="submit">
-              <Repeat2 size={17} aria-hidden />
-              Show learning instead
-            </button>
-          </form>
+          <button className="button-secondary" type="button" disabled={busy} onClick={() => onFeedback("INTERESTING")}>
+            Done
+          </button>
+          <button className="button-quiet" type="button" disabled={busy} onClick={onAnother}>
+            <Repeat2 size={17} aria-hidden />
+            Show learning instead
+          </button>
         </div>
       </div>
     </article>

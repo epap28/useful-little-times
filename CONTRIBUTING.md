@@ -6,10 +6,9 @@ Thanks for helping make tiny waiting moments more useful.
 
 ```bash
 npm install
-cp .env.example .env
-docker compose up -d
-npm run db:migrate
-npm run db:seed
+npm run d1:migrate:local
+npm run d1:seed:local
+npm run worker:dev
 npm run dev
 ```
 

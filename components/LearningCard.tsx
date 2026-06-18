@@ -1,37 +1,19 @@
-import type { CardType, Feedback } from "@prisma/client";
-import { Brain, CheckCircle2, ExternalLink, Lightbulb, Repeat2, Sparkles } from "lucide-react";
-import { recordFeedbackAction, showAnotherAction } from "@/app/actions";
+"use client";
 
-type Source = {
-  source: {
-    title: string;
-    url: string;
-    publisher: string | null;
-  };
-};
+import { Brain, CheckCircle2, ExternalLink, Lightbulb, Repeat2, Sparkles } from "lucide-react";
+import type { Feedback, LearningItem } from "@/lib/domain";
 
 type LearningCardProps = {
   interactionId: string;
-  item: {
-    title: string;
-    cardType: CardType;
-    content: string;
-    explanation: string;
-    prompt: string | null;
-    answer: string | null;
-    answerOptions: unknown;
-    mnemonic: string | null;
-    analogy: string | null;
-    category: {
-      name: string;
-    };
-    sources: Source[];
-  };
+  item: LearningItem;
   feedback: Feedback | null;
   quizCorrect: boolean | null;
+  onFeedback: (feedback: Feedback, quizAnswer?: string) => void;
+  onAnother: () => void;
+  busy?: boolean;
 };
 
-function labelForCardType(cardType: CardType) {
+function labelForCardType(cardType: string) {
   return cardType
     .toLowerCase()
     .split("_")
@@ -39,13 +21,7 @@ function labelForCardType(cardType: CardType) {
     .join(" ");
 }
 
-function getAnswerOptions(answerOptions: unknown) {
-  return Array.isArray(answerOptions) ? answerOptions.filter((option): option is string => typeof option === "string") : [];
-}
-
-export function LearningCard({ interactionId, item, feedback, quizCorrect }: LearningCardProps) {
-  const answerOptions = getAnswerOptions(item.answerOptions);
-
+export function LearningCard({ item, feedback, quizCorrect, onFeedback, onAnother, busy = false }: LearningCardProps) {
   return (
     <article className="card learning-card" aria-label="Learning card">
       <div className="card-header">
@@ -80,18 +56,24 @@ export function LearningCard({ interactionId, item, feedback, quizCorrect }: Lea
           </div>
         ) : null}
 
-        {answerOptions.length > 0 ? (
-          <form action={recordFeedbackAction} className="compact-stack">
-            <input type="hidden" name="interactionId" value={interactionId} />
-            <input type="hidden" name="feedback" value="INTERESTING" />
+        {item.answerOptions.length > 0 ? (
+          <form
+            className="compact-stack"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const formData = new FormData(event.currentTarget);
+              const quizAnswer = String(formData.get("quizAnswer") || "");
+              onFeedback("INTERESTING", quizAnswer);
+            }}
+          >
             <strong>Mini quiz</strong>
-            {answerOptions.map((option) => (
+            {item.answerOptions.map((option) => (
               <label className="choice-row" key={option}>
                 <span>{option}</span>
                 <input name="quizAnswer" type="radio" value={option} required />
               </label>
             ))}
-            <button className="button-secondary" type="submit">
+            <button className="button-secondary" type="submit" disabled={busy}>
               <CheckCircle2 size={17} aria-hidden />
               Check answer
             </button>
@@ -104,13 +86,13 @@ export function LearningCard({ interactionId, item, feedback, quizCorrect }: Lea
         <div>
           <strong>Sources</strong>
           <ul className="source-list">
-            {item.sources.map(({ source }) => (
+            {item.sources.map((source) => (
               <li key={source.url}>
                 <a href={source.url} target="_blank" rel="noreferrer">
                   {source.title}
                   <ExternalLink size={13} aria-hidden />
                 </a>
-                {source.publisher ? <span className="muted"> · {source.publisher}</span> : null}
+                {source.publisher ? <span className="muted"> - {source.publisher}</span> : null}
               </li>
             ))}
           </ul>
@@ -119,38 +101,21 @@ export function LearningCard({ interactionId, item, feedback, quizCorrect }: Lea
         {feedback ? <p className="pill">Saved feedback: {feedback.toLowerCase().replaceAll("_", " ")}</p> : null}
 
         <div className="row" aria-label="Feedback controls">
-          <FeedbackButton interactionId={interactionId} feedback="INTERESTING" label="Interesting" />
-          <FeedbackButton interactionId={interactionId} feedback="KNEW_THIS" label="I knew this" />
-          <FeedbackButton interactionId={interactionId} feedback="NOT_RELEVANT" label="Not relevant" />
-          <form action={showAnotherAction}>
-            <input type="hidden" name="interactionId" value={interactionId} />
-            <button className="button-quiet" type="submit">
-              <Repeat2 size={17} aria-hidden />
-              Show me another
-            </button>
-          </form>
+          <button className="button-quiet" type="button" disabled={busy} onClick={() => onFeedback("INTERESTING")}>
+            Interesting
+          </button>
+          <button className="button-quiet" type="button" disabled={busy} onClick={() => onFeedback("KNEW_THIS")}>
+            I knew this
+          </button>
+          <button className="button-quiet" type="button" disabled={busy} onClick={() => onFeedback("NOT_RELEVANT")}>
+            Not relevant
+          </button>
+          <button className="button-quiet" type="button" disabled={busy} onClick={onAnother}>
+            <Repeat2 size={17} aria-hidden />
+            Show me another
+          </button>
         </div>
       </div>
     </article>
-  );
-}
-
-function FeedbackButton({
-  interactionId,
-  feedback,
-  label
-}: {
-  interactionId: string;
-  feedback: Feedback;
-  label: string;
-}) {
-  return (
-    <form action={recordFeedbackAction}>
-      <input type="hidden" name="interactionId" value={interactionId} />
-      <input type="hidden" name="feedback" value={feedback} />
-      <button className="button-quiet" type="submit">
-        {label}
-      </button>
-    </form>
   );
 }

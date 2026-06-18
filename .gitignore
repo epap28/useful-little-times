@@ -2,6 +2,8 @@
 node_modules
 .npm-cache
 .playwright-browsers
+.wrangler
+worker/.wrangler
 coverage
 playwright-report
 test-results
@@ -11,3 +13,6 @@ test-results
 *.tsbuildinfo
 dist
 tmp
+out
+worker/.dev.vars
+worker/.generated

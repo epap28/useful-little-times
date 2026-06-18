@@ -4,8 +4,6 @@ import { setTimeout as delay } from "node:timers/promises";
 const port = 3000;
 const baseUrl = `http://127.0.0.1:${port}`;
 
-process.env.DATABASE_URL ??= "postgresql://postgres:postgres@localhost:5432/useful_little_times?schema=public";
-process.env.AUTH_SECRET ??= "local-e2e-secret-for-useful-little-times";
 process.env.PLAYWRIGHT_BROWSERS_PATH ??= ".playwright-browsers";
 
 function startServer() {

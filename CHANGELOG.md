@@ -3,7 +3,8 @@
 ## 0.1.0
 
 - Initial MVP scaffold
-- Account flow with signed HTTP-only sessions
+- Static GitHub Pages frontend and Cloudflare Worker API
+- Account flow with opaque Worker sessions
 - Preferences, learning history, recap history
 - Sourced learning seed data and validation
 - Recommendation engine with category filtering, variety, spaced repetition, and activity insertion

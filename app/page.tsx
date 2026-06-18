@@ -1,18 +1,11 @@
 import { ArrowRight, Clock, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
-import { getCurrentUser } from "@/lib/auth";
 
-export default async function HomePage() {
-  const user = await getCurrentUser();
-  if (user) {
-    redirect("/dashboard");
-  }
-
+export default function HomePage() {
   return (
     <>
-      <SiteHeader user={null} />
+      <SiteHeader />
       <main className="shell hero">
         <section className="stack">
           <p className="kicker">Micro-learning for idle moments</p>

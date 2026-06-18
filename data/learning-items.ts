@@ -1,4 +1,5 @@
 import type { CategorySlug } from "./categories";
+import type { CardType } from "../lib/domain";
 
 export const cardTypes = [
   "QUICK_FACT",
@@ -13,13 +14,11 @@ export const cardTypes = [
   "ONE_EXAMPLE"
 ] as const;
 
-export type CardTypeSeed = (typeof cardTypes)[number];
-
 export type LearningSeedItem = {
   slug: string;
   title: string;
   categorySlug: CategorySlug;
-  cardType: CardTypeSeed;
+  cardType: CardType;
   content: string;
   explanation: string;
   prompt?: string;
