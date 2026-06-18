@@ -14,9 +14,10 @@ export function DashboardClient() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [interaction, setInteraction] = useState<Interaction | null>(null);
-  const [batchCount, setBatchCount] = useState(0);
+  const [learningCount, setLearningCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [autoRecapping, setAutoRecapping] = useState(false);
 
   useEffect(() => {
     if (!getToken()) {
@@ -33,7 +34,12 @@ export function DashboardClient() {
     () => user?.preferences.filter((preference) => preference.status === "PREFERRED").length ?? 0,
     [user]
   );
-  const progress = Math.min(batchCount, 10);
+  const progress = Math.min(learningCount, 10);
+
+  async function createAndOpenRecap() {
+    const response = await createRecap();
+    router.push(`/recap?id=${encodeURIComponent(response.recap.id)}` as Route);
+  }
 
   async function launch() {
     setError(null);
@@ -41,9 +47,16 @@ export function DashboardClient() {
     try {
       const response = await launchMoment();
       setInteraction(response.interaction);
-      setBatchCount(response.interaction.batchNumber === 1 ? batchCount + 1 : batchCount + 1);
+      if (response.interaction.learningItem) {
+        const nextLearningCount = learningCount + 1;
+        setLearningCount(nextLearningCount);
+        if (nextLearningCount >= 10) {
+          setAutoRecapping(true);
+          await createAndOpenRecap();
+        }
+      }
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not launch a card.");
+      setError(caught instanceof Error ? caught.message : "Could not continue the session.");
     } finally {
       setBusy(false);
     }
@@ -70,6 +83,9 @@ export function DashboardClient() {
   }
 
   async function another() {
+    if (learningCount >= 10 || autoRecapping) {
+      return;
+    }
     if (interaction) {
       await feedback("SHOW_ANOTHER");
     }
@@ -80,8 +96,7 @@ export function DashboardClient() {
     setError(null);
     setBusy(true);
     try {
-      const response = await createRecap();
-      router.push(`/recap?id=${encodeURIComponent(response.recap.id)}` as Route);
+      await createAndOpenRecap();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not create recap.");
     } finally {
@@ -99,7 +114,7 @@ export function DashboardClient() {
           </div>
           <span className="pill">
             <CheckCircle2 size={15} aria-hidden />
-            {batchCount} this batch
+            {learningCount} learning cards
           </span>
         </div>
 
@@ -150,20 +165,20 @@ export function DashboardClient() {
           <p className="kicker">Batch recap</p>
           <h2 className="section-title">{progress}/10 little things</h2>
         </div>
-        <div className="progress-bar" aria-label={`${progress} out of 10 uses toward the next recap`}>
+        <div className="progress-bar" aria-label={`${progress} out of 10 learning cards toward the next recap`}>
           <div className="progress-fill" style={{ width: `${progress * 10}%` }} />
         </div>
         <p className="muted">
           Recaps help memory because your brain strengthens information when it retrieves it. This is not about cramming
           more. It is about making a small useful moment stick.
         </p>
-        {batchCount >= 10 ? <p className="message">You have seen 10 little things. Want a quick recap?</p> : null}
+        {autoRecapping ? <p className="message">10 learning cards reached. Opening your recap...</p> : null}
         <div className="compact-stack">
-          <button className="button-secondary" type="button" onClick={launch} disabled={busy}>
+          <button className="button-secondary" type="button" onClick={launch} disabled={busy || autoRecapping || learningCount >= 10}>
             <RotateCw size={17} aria-hidden />
             Show another
           </button>
-          {batchCount > 0 ? (
+          {learningCount > 0 ? (
             <button className="button-quiet" type="button" onClick={endSession} disabled={busy}>
               End work session
             </button>

@@ -31,6 +31,14 @@ export function SettingsClient() {
     () => new Set(user?.preferences.filter((preference) => preference.status === "AVOIDED").map((preference) => preference.category.slug)),
     [user]
   );
+  const preferenceKey = useMemo(
+    () =>
+      user?.preferences
+        .map((preference) => `${preference.category.slug}:${preference.status}`)
+        .sort()
+        .join("|") ?? "loading",
+    [user]
+  );
 
   async function submit(formData: FormData) {
     setError(null);
@@ -59,7 +67,7 @@ export function SettingsClient() {
         </p>
         {error ? <p className="message">{error}</p> : null}
         <form action={submit} className="stack">
-          <PreferenceGrid preferred={preferred} avoided={avoided} />
+          <PreferenceGrid key={preferenceKey} preferred={preferred} avoided={avoided} />
           <div className="spread">
             <p className="muted">Tip: choose at least 3 preferred domains so the app can keep things varied.</p>
             <button className="button-primary" type="submit" disabled={busy}>

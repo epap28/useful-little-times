@@ -15,7 +15,11 @@ export function SiteHeader() {
 
   function signOut() {
     clearToken();
-    window.location.href = "/";
+    if (window.location.hostname === "epap28.github.io") {
+      window.location.href = "https://epap28.github.io/useful-little-times/auth/";
+      return;
+    }
+    window.location.href = "/auth";
   }
 
   return (

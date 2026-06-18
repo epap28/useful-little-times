@@ -2,6 +2,7 @@
 
 import { Brain, CheckCircle2, ExternalLink, Lightbulb, Repeat2, Sparkles } from "lucide-react";
 import type { Feedback, LearningItem } from "@/lib/domain";
+import { categoryThemeStyle } from "@/lib/category-theme";
 
 type LearningCardProps = {
   interactionId: string;
@@ -11,6 +12,7 @@ type LearningCardProps = {
   onFeedback: (feedback: Feedback, quizAnswer?: string) => void;
   onAnother: () => void;
   busy?: boolean;
+  preview?: boolean;
 };
 
 function labelForCardType(cardType: string) {
@@ -21,15 +23,19 @@ function labelForCardType(cardType: string) {
     .join(" ");
 }
 
-export function LearningCard({ item, feedback, quizCorrect, onFeedback, onAnother, busy = false }: LearningCardProps) {
+export function LearningCard({ item, feedback, quizCorrect, onFeedback, onAnother, busy = false, preview = false }: LearningCardProps) {
   return (
-    <article className="card learning-card" aria-label="Learning card">
+    <article
+      className={`card learning-card themed-card ${preview ? "preview-card" : ""}`}
+      style={categoryThemeStyle(item.category.slug)}
+      aria-label="Learning card"
+    >
       <div className="card-header">
         <div>
           <p className="kicker">{item.category.name}</p>
           <h1 className="card-title">{item.title}</h1>
         </div>
-        <span className="pill">
+        <span className="pill theme-pill">
           <Brain size={15} aria-hidden />
           {labelForCardType(item.cardType)}
         </span>
@@ -56,7 +62,16 @@ export function LearningCard({ item, feedback, quizCorrect, onFeedback, onAnothe
           </div>
         ) : null}
 
-        {item.answerOptions.length > 0 ? (
+        {item.answerOptions.length > 0 && preview ? (
+          <div className="compact-stack">
+            <strong>Mini quiz</strong>
+            {item.answerOptions.map((option) => (
+              <span className="quiz-option-preview" key={option}>
+                {option}
+              </span>
+            ))}
+          </div>
+        ) : item.answerOptions.length > 0 ? (
           <form
             className="compact-stack"
             onSubmit={(event) => {
@@ -98,23 +113,25 @@ export function LearningCard({ item, feedback, quizCorrect, onFeedback, onAnothe
           </ul>
         </div>
 
-        {feedback ? <p className="pill">Saved feedback: {feedback.toLowerCase().replaceAll("_", " ")}</p> : null}
+        {feedback ? <p className="pill theme-pill">Saved feedback: {feedback.toLowerCase().replaceAll("_", " ")}</p> : null}
 
-        <div className="row" aria-label="Feedback controls">
-          <button className="button-quiet" type="button" disabled={busy} onClick={() => onFeedback("INTERESTING")}>
-            Interesting
-          </button>
-          <button className="button-quiet" type="button" disabled={busy} onClick={() => onFeedback("KNEW_THIS")}>
-            I knew this
-          </button>
-          <button className="button-quiet" type="button" disabled={busy} onClick={() => onFeedback("NOT_RELEVANT")}>
-            Not relevant
-          </button>
-          <button className="button-quiet" type="button" disabled={busy} onClick={onAnother}>
-            <Repeat2 size={17} aria-hidden />
-            Show me another
-          </button>
-        </div>
+        {preview ? null : (
+          <div className="row" aria-label="Feedback controls">
+            <button className="button-quiet" type="button" disabled={busy} onClick={() => onFeedback("INTERESTING")}>
+              Interesting
+            </button>
+            <button className="button-quiet" type="button" disabled={busy} onClick={() => onFeedback("KNEW_THIS")}>
+              I knew this
+            </button>
+            <button className="button-quiet" type="button" disabled={busy} onClick={() => onFeedback("NOT_RELEVANT")}>
+              Not relevant
+            </button>
+            <button className="button-quiet" type="button" disabled={busy} onClick={onAnother}>
+              <Repeat2 size={17} aria-hidden />
+              Show me another
+            </button>
+          </div>
+        )}
       </div>
     </article>
   );
