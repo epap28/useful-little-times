@@ -1,6 +1,6 @@
 "use client";
 
-import { Brain, CheckCircle2, ExternalLink, Lightbulb, Repeat2, Sparkles } from "lucide-react";
+import { ArrowRight, Brain, CheckCircle2, ExternalLink, Lightbulb, Sparkles } from "lucide-react";
 import type { Feedback, LearningItem } from "@/lib/domain";
 import { categoryThemeStyle } from "@/lib/category-theme";
 
@@ -117,18 +117,12 @@ export function LearningCard({ item, feedback, quizCorrect, onFeedback, onAnothe
 
         {preview ? null : (
           <div className="row" aria-label="Feedback controls">
-            <button className="button-quiet" type="button" disabled={busy} onClick={() => onFeedback("INTERESTING")}>
-              Interesting
-            </button>
-            <button className="button-quiet" type="button" disabled={busy} onClick={() => onFeedback("KNEW_THIS")}>
-              I knew this
-            </button>
             <button className="button-quiet" type="button" disabled={busy} onClick={() => onFeedback("NOT_RELEVANT")}>
               Not relevant
             </button>
-            <button className="button-quiet" type="button" disabled={busy} onClick={onAnother}>
-              <Repeat2 size={17} aria-hidden />
-              Show me another
+            <button className="button-secondary" type="button" disabled={busy} onClick={onAnother}>
+              Next one
+              <ArrowRight size={17} aria-hidden />
             </button>
           </div>
         )}

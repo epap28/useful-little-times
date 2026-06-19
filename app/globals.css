@@ -442,18 +442,27 @@ button {
   text-transform: uppercase;
 }
 
-.preference-card-preferred {
+.preference-card-validated {
   background:
     linear-gradient(145deg, color-mix(in srgb, var(--theme-soft, #dff3ec) 78%, white), rgba(255, 255, 255, 0.96)),
     var(--theme-surface, var(--surface-strong));
 }
 
-.preference-card-avoided {
-  filter: saturate(0.82);
+.preference-card-unvalidated {
+  background:
+    linear-gradient(145deg, #f1f1ef, #ffffff),
+    var(--surface-strong);
+  border-color: #d6d6d2;
+  color: color-mix(in srgb, var(--ink) 54%, white);
+  filter: grayscale(1) saturate(0.12);
 }
 
-.preference-card-avoided > span:not(.preference-check) {
-  color: #8a2636;
+.preference-card-unvalidated::before {
+  opacity: 0.18;
+}
+
+.preference-card-unvalidated > span:not(.preference-check) {
+  color: var(--muted);
 }
 
 .preference-check {
@@ -470,8 +479,9 @@ button {
   color: var(--theme-accent, var(--accent));
 }
 
-.preference-card-neutral .preference-check {
-  opacity: 0;
+.preference-card-unvalidated .preference-check {
+  background: rgba(255, 255, 255, 0.7);
+  color: transparent;
 }
 
 .choice-row {
