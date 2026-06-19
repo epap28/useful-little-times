@@ -1,9 +1,10 @@
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { activityItems } from "../data/activity-items";
 import { categories } from "../data/categories";
-import { learningItems } from "../data/learning-items";
+import { learningItems, retiredLearningItemSlugs } from "../data/learning-items";
 import { validateSeedContent } from "../lib/content-validation";
 
 function sql(value: string | null | undefined) {
@@ -15,6 +16,10 @@ function sql(value: string | null | undefined) {
 
 function json(value: unknown) {
   return sql(JSON.stringify(value));
+}
+
+function sourceIdForUrl(url: string) {
+  return `source-${createHash("sha256").update(url).digest("hex").slice(0, 16)}`;
 }
 
 function upsert(table: string, columns: string[], values: string[], conflict: string, updates: string[]) {
@@ -37,14 +42,10 @@ for (const category of categories) {
   );
 }
 
-const sourceIdsByUrl = new Map<string, string>();
-let sourceIndex = 1;
 for (const item of learningItems) {
   for (const source of item.sources) {
-    if (!sourceIdsByUrl.has(source.url)) {
-      const id = `source-${sourceIndex}`;
-      sourceIndex += 1;
-      sourceIdsByUrl.set(source.url, id);
+    const id = sourceIdForUrl(source.url);
+    if (!statements.some((statement) => statement.includes(sql(source.url)))) {
       statements.push(
         upsert(
           "sources",
@@ -56,6 +57,10 @@ for (const item of learningItems) {
       );
     }
   }
+}
+
+if (retiredLearningItemSlugs.length > 0) {
+  statements.push(`UPDATE learning_items SET approved = 0 WHERE slug IN (${retiredLearningItemSlugs.map(sql).join(", ")});`);
 }
 
 for (const item of learningItems) {
@@ -108,11 +113,11 @@ for (const item of learningItems) {
       ]
     )
   );
+  statements.push(`DELETE FROM learning_item_sources WHERE learning_item_id = ${sql(item.slug)};`);
   for (const source of item.sources) {
     statements.push(
-      `INSERT OR IGNORE INTO learning_item_sources (learning_item_id, source_id) VALUES (${sql(item.slug)}, ${sql(
-        sourceIdsByUrl.get(source.url)
-      )});`
+      `INSERT OR IGNORE INTO learning_item_sources (learning_item_id, source_id)
+VALUES (${sql(item.slug)}, (SELECT id FROM sources WHERE url = ${sql(source.url)}));`
     );
   }
 }
@@ -150,6 +155,12 @@ for (const activity of activityItems) {
 mkdirSync("worker/.generated", { recursive: true });
 const output = join("worker", ".generated", "seed.sql");
 writeFileSync(output, `${statements.join("\n\n")}\n`);
+
+if (process.argv.includes("--dry-run")) {
+  console.log(`Seed dry-run passed: ${learningItems.length} learning items, ${activityItems.length} activity items.`);
+  console.log(`Generated SQL at ${output}. No D1 database was modified.`);
+  process.exit(0);
+}
 
 const remote = process.argv.includes("--remote");
 const result = spawnSync(

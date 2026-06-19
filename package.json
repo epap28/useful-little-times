@@ -21,6 +21,7 @@
     "worker:types": "wrangler types worker/src/worker-configuration.d.ts --config worker/wrangler.jsonc",
     "d1:migrate:local": "wrangler d1 migrations apply useful-little-times --local --config worker/wrangler.jsonc",
     "d1:migrate:remote": "wrangler d1 migrations apply useful-little-times --remote --config worker/wrangler.jsonc",
+    "d1:seed:dry-run": "tsx scripts/seed-d1.ts --dry-run",
     "d1:seed:local": "tsx scripts/seed-d1.ts --local",
     "d1:seed:remote": "tsx scripts/seed-d1.ts --remote",
     "content:validate": "tsx scripts/validate-content.ts"
