@@ -429,17 +429,9 @@ button {
 }
 
 .preference-card strong,
-.preference-card span {
+.preference-check {
   position: relative;
   z-index: 1;
-}
-
-.preference-card > span:not(.preference-check) {
-  color: var(--theme-accent, var(--accent-strong));
-  font-size: 0.8rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .preference-card-validated {
@@ -459,10 +451,6 @@ button {
 
 .preference-card-unvalidated::before {
   opacity: 0.18;
-}
-
-.preference-card-unvalidated > span:not(.preference-check) {
-  color: var(--muted);
 }
 
 .preference-check {

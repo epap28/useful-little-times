@@ -43,7 +43,6 @@ export function PreferenceGrid({
               {isValidated ? <Check size={16} /> : null}
             </span>
             <strong>{category.name}</strong>
-            <span>{isValidated ? "Validated" : "Not validated"}</span>
           </button>
         );
       })}

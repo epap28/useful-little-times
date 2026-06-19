@@ -113,7 +113,7 @@ export function LearningCard({ item, feedback, quizCorrect, onFeedback, onAnothe
           </ul>
         </div>
 
-        {feedback ? <p className="pill theme-pill">Saved feedback: {feedback.toLowerCase().replaceAll("_", " ")}</p> : null}
+        {feedback === "NOT_RELEVANT" ? <p className="pill theme-pill">Saved feedback: not relevant</p> : null}
 
         {preview ? null : (
           <div className="row" aria-label="Feedback controls">

@@ -86,9 +86,6 @@ export function DashboardClient() {
     if (learningCount >= 10 || autoRecapping) {
       return;
     }
-    if (interaction) {
-      await feedback("SHOW_ANOTHER");
-    }
     await launch();
   }
 

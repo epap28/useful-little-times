@@ -42,7 +42,7 @@ export function ActivityCard({ item, feedback, onFeedback, onAnother, busy = fal
         <div className="note">
           <ShieldCheck size={17} aria-hidden /> {item.safetyNote}
         </div>
-        {feedback ? <p className="pill theme-pill">Saved feedback: {feedback.toLowerCase().replaceAll("_", " ")}</p> : null}
+        {feedback === "NOT_RELEVANT" ? <p className="pill theme-pill">Saved feedback: not relevant</p> : null}
         {preview ? null : (
           <div className="row">
             <button className="button-secondary" type="button" disabled={busy} onClick={() => onFeedback("INTERESTING")}>
